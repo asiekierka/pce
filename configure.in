@@ -249,6 +249,26 @@ AC_SUBST(PCE_X11_CFLAGS)
 AC_SUBST(PCE_X11_LIBS)
 
 
+AC_MSG_CHECKING([whether to build 3DS drivers])
+AC_ARG_WITH(n3ds,
+  [AS_HELP_STRING([--with-n3ds], [Build the 3DS drivers [no]])],
+  [
+	if test "x$withval" = "xno" ; then
+		PCE_ENABLE_N3DS=0
+		AC_MSG_RESULT([no (forced)])
+	else
+		PCE_ENABLE_N3DS=1
+		AC_MSG_RESULT([yes (forced)])
+	fi
+  ],
+  [
+	PCE_ENABLE_N3DS=0
+	AC_MSG_RESULT([no (default)])
+  ]
+)
+AC_SUBST(PCE_ENABLE_N3DS)
+
+
 PCE_ENABLE_SDL=0
 PCE_ENABLE_SDL1=0
 PCE_ENABLE_SDL2=0
@@ -1023,6 +1043,12 @@ if test "x$PCE_ENABLE_SDL2" = "x1" ; then
 	term1="$term1 sdl2"
 else
 	term2="$term2 sdl2"
+fi
+
+if test "x$PCE_ENABLE_N3DS" = "x1" ; then
+	term1="$term1 n3ds"
+else
+	term2="$term2 n3ds"
 fi
 
 

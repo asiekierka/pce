@@ -48,6 +48,10 @@ struct snd_drv_list drvtab[] = {
 	{ "sdl", snd_sdl_open },
 #endif
 
+#ifdef _3DS
+	{ "n3ds", snd_n3ds_open },
+#endif
+
 	{ NULL, NULL }
 };
 

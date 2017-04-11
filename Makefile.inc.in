@@ -42,6 +42,7 @@ PCE_ENABLE_SDL1 := @PCE_ENABLE_SDL1@
 PCE_ENABLE_SDL2 := @PCE_ENABLE_SDL2@
 PCE_SDL_CFLAGS  := @PCE_SDL_CFLAGS@
 PCE_SDL_LIBS    := @PCE_SDL_LIBS@
+PCE_ENABLE_N3DS := @PCE_ENABLE_N3DS@
 
 PCE_HAVE_STDINT_H   := @PCE_HAVE_STDINT_H@
 PCE_HAVE_INTTYPES_H := @PCE_HAVE_INTTYPES_H@
@@ -57,11 +58,20 @@ PCE_HOST_IA32  := @PCE_HOST_IA32@
 PCE_HOST_PPC   := @PCE_HOST_PPC@
 PCE_HOST_SPARC := @PCE_HOST_SPARC@
 
+PCE_BUILD_UTILS := @PCE_BUILD_UTILS@
+
 ifneq "$(PCE_HAVE_STDINT_H)" "1"
 CFLAGS_DEFAULT += -Isrc/lib/stdint
 ifneq "$(srcdir)" "."
 CFLAGS_DEFAULT += -I$(srcdir)/src/lib/stdint
 endif
+endif
+
+ifeq "$(PCE_ENABLE_N3DS)" "1"
+# workaround for lto support
+AR	= arm-none-eabi-gcc-ar
+NM	= arm-none-eabi-gcc-nm
+RANLIB	= arm-none-eabi-gcc-ranlib
 endif
 
 ifeq "$(PCE_HOST_IA32)" "1"
@@ -167,6 +177,8 @@ include $(srcdir)/src/arch/sim405/pceutils/Makefile.inc
 include $(srcdir)/src/arch/simarm/Makefile.inc
 include $(srcdir)/src/arch/sims32/Makefile.inc
 include $(srcdir)/src/arch/vic20/Makefile.inc
+
+ifeq "$(PCE_BUILD_UTILS)" "1"
 include $(srcdir)/src/utils/Makefile.inc
 include $(srcdir)/src/utils/aym/Makefile.inc
 include $(srcdir)/src/utils/pce-img/Makefile.inc
@@ -174,6 +186,7 @@ include $(srcdir)/src/utils/pfi/Makefile.inc
 include $(srcdir)/src/utils/pri/Makefile.inc
 include $(srcdir)/src/utils/psi/Makefile.inc
 include $(srcdir)/src/utils/pti/Makefile.inc
+endif
 
 TARGETS += $(BIN) $(ETC) $(SHARE)
 

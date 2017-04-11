@@ -20,6 +20,12 @@ else
 DRV_SND_NBAS += sound-sdl
 endif
 
+ifeq "$(PCE_ENABLE_N3DS)" "1"
+DRV_SND_BAS += sound-n3ds
+else
+DRV_SND_NBAS += sound-n3ds
+endif
+
 DRV_SND_SRC  := $(foreach f,$(DRV_SND_BAS),$(rel)/$(f).c)
 DRV_SND_NSRC := $(foreach f,$(DRV_SND_NBAS),$(rel)/$(f).c)
 DRV_SND_OBJ  := $(foreach f,$(DRV_SND_BAS),$(rel)/$(f).o)

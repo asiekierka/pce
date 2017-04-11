@@ -43,12 +43,18 @@
 #include <termios.h>
 #endif
 
+#ifdef _3DS
+#include <3ds.h>
+#endif
+
 #include "sysdep.h"
 
 
 int pce_usleep (unsigned long usec)
 {
-#if defined(HAVE_NANOSLEEP)
+#if defined(_3DS)
+	svcSleepThread(usec * 1000);
+#elif defined(HAVE_NANOSLEEP)
 	struct timespec t;
 
 	t.tv_sec = usec / 1000000;
@@ -72,7 +78,7 @@ int pce_usleep (unsigned long usec)
 
 unsigned long pce_get_interval_us (unsigned long *val)
 {
-#ifdef HAVE_GETTIMEOFDAY
+#if defined(HAVE_GETTIMEOFDAY)
 	unsigned long  clk0, clk1;
 	struct timeval tv;
 

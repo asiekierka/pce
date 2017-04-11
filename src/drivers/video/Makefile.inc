@@ -26,6 +26,12 @@ else
 DRV_TRM_NBAS += sdl2
 endif
 
+ifeq "$(PCE_ENABLE_N3DS)" "1"
+DRV_TRM_BAS += n3ds lodepng/lodepng
+else
+DRV_TRM_NBAS += n3ds
+endif
+
 DRV_TRM_SRC  := $(foreach f,$(DRV_TRM_BAS),$(rel)/$(f).c)
 DRV_TRM_NSRC := $(foreach f,$(DRV_TRM_NBAS),$(rel)/$(f).c)
 DRV_TRM_OBJ  := $(foreach f,$(DRV_TRM_BAS),$(rel)/$(f).o)
@@ -54,5 +60,6 @@ $(rel)/keys.o:		$(rel)/keys.c
 $(rel)/null.o:		$(rel)/null.c
 $(rel)/term-old.o:	$(rel)/term-old.c
 $(rel)/terminal.o:	$(rel)/terminal.c
+$(rel)/lodepng/lodepng.o:	$(rel)/lodepng/lodepng.c
 
 $(rel)/terminal.a:	$(DRV_TRM_OBJ)

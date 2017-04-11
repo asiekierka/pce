@@ -401,8 +401,13 @@ void st_kbd_set_mouse (st_kbd_t *kbd, int dx, int dy, unsigned but)
 		kbd->mouse_but[1] = but;
 	}
 	else {
+#ifdef _3DS
+		kbd->mouse_dx = dx;
+		kbd->mouse_dy = kbd->y0_at_top ? dy : -dy;
+#else
 		kbd->mouse_dx += dx;
 		kbd->mouse_dy += kbd->y0_at_top ? dy : -dy;
+#endif
 		kbd->mouse_but[1] = but;
 
 		st_kbd_check_mouse (kbd);

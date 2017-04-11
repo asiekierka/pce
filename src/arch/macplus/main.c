@@ -47,7 +47,6 @@
 #include <SDL.h>
 #endif
 
-
 const char *par_terminal = NULL;
 
 unsigned   par_disk_boot = 0;
@@ -225,6 +224,7 @@ int main (int argc, char *argv[])
 
 	ini_str_init (&par_ini_str);
 
+#ifndef _3DS
 	while (1) {
 		r = pce_getopt (argc, argv, &optarg, opts);
 
@@ -321,6 +321,12 @@ int main (int argc, char *argv[])
 			return (1);
 		}
 	}
+#else
+	cfg = "/pce/macplus.cfg";
+	pce_log_add_fname("/pce/macplus.log", MSG_DEB);
+	run = 1;
+	pce_log_set_level (stderr, MSG_DEB);
+#endif
 
 	mac_log_banner();
 

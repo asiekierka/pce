@@ -53,6 +53,12 @@ int trm_is_valid (const char *str)
 	}
 #endif
 
+#ifdef _3DS
+	if (strcmp (str, "n3ds") == 0) {
+		return (1);
+	}
+#endif
+
 	return (0);
 }
 
@@ -139,6 +145,17 @@ terminal_t *ini_get_terminal (ini_sct_t *ini, const char *def)
 		}
 #else
 		pce_log (MSG_ERR, "*** terminal driver 'sdl' not supported\n");
+#endif
+	}
+	else if (strcmp (driver, "n3ds") == 0) {
+#ifdef _3DS
+		trm = n3ds_new (sct);
+
+		if (trm == NULL) {
+			pce_log (MSG_ERR, "*** setting up n3ds terminal failed\n");
+		}
+#else
+		pce_log (MSG_ERR, "*** terminal driver 'n3ds' not supported\n");
 #endif
 	}
 	else if (strcmp (driver, "null") == 0) {
