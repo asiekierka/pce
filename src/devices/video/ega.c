@@ -597,14 +597,14 @@ void ega_mode0_update_char (ega_t *ega, unsigned char *dst, unsigned w,
 
 		for (x = 0; x < cw; x++) {
 			if (val & 0x100) {
-				dst[3 * x + 0] = fg[0];
+				dst[3 * x + 0] = fg[2];
 				dst[3 * x + 1] = fg[1];
-				dst[3 * x + 2] = fg[2];
+				dst[3 * x + 2] = fg[0];
 			}
 			else {
-				dst[3 * x + 0] = bg[0];
+				dst[3 * x + 0] = bg[2];
 				dst[3 * x + 1] = bg[1];
-				dst[3 * x + 2] = bg[2];
+				dst[3 * x + 2] = bg[0];
 			}
 
 			val <<= 1;

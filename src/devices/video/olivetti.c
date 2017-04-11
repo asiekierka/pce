@@ -204,9 +204,9 @@ void m24_line_mode0 (m24_t *m24, unsigned row)
 		for (j = 0; j < 8; j++) {
 			col = (val & mask) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			mask >>= 1;
 		}
@@ -244,9 +244,9 @@ void m24_line_mode1 (m24_t *m24, unsigned row)
 		for (j = 0; j < 8; j++) {
 			col = m24->rgbi + 4 * m24->pal[(val >> 14) & 3];
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 2;
 		}
@@ -295,9 +295,9 @@ void m24_line_mode2 (m24_t *m24, unsigned row)
 		for (j = 0; j < 16; j++) {
 			col = (val & 0x8000) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 1;
 		}

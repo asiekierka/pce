@@ -214,14 +214,14 @@ void mac_video_update (mac_video_t *mv)
 			j = 0;
 			for (i = 0; i < (8 * k); i++) {
 				if (dst[i >> 3] & (0x80 >> (i & 7))) {
-					rgb[j + 0] = col0[0];
+					rgb[j + 0] = col0[2];
 					rgb[j + 1] = col0[1];
-					rgb[j + 2] = col0[2];
+					rgb[j + 2] = col0[0];
 				}
 				else {
-					rgb[j + 0] = col1[0];
+					rgb[j + 0] = col1[2];
 					rgb[j + 1] = col1[1];
-					rgb[j + 2] = col1[2];
+					rgb[j + 2] = col1[0];
 				}
 
 				j += 3;

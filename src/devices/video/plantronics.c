@@ -170,9 +170,9 @@ void pla_line_mode0 (plantronics_t *pla, unsigned row)
 		for (j = 0; j < 8; j++) {
 			col = (val & mask) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			mask >>= 1;
 		}
@@ -210,9 +210,9 @@ void pla_line_mode1 (plantronics_t *pla, unsigned row)
 		for (j = 0; j < 8; j++) {
 			col = pla_rgb[pla->pal[(val >> 14) & 3]];
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 2;
 		}
@@ -253,9 +253,9 @@ void pla_line_mode2 (plantronics_t *pla, unsigned row)
 		for (j = 0; j < 16; j++) {
 			col = (val & 0x8000) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 1;
 		}
@@ -298,9 +298,9 @@ void pla_line_mode3 (plantronics_t *pla, unsigned row)
 			idx |= ((val0 >> 13) & 4) | ((val1 >> 11) & 8);
 			col = pla_rgb[idx];
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val0 <<= 2;
 			val1 <<= 2;
@@ -344,9 +344,9 @@ void pla_line_mode4 (plantronics_t *pla, unsigned row)
 			idx = pla->pal[idx];
 			col = pla_rgb[idx];
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val0 <<= 1;
 			val1 <<= 1;

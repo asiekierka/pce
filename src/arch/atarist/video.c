@@ -458,9 +458,9 @@ void st_video_update_line_0 (st_video_t *vid)
 
 			col = vid->pal_col[idx];
 
-			dst[0] = col[0];
+			dst[0] = col[2];
 			dst[1] = col[1];
-			dst[2] = col[2];
+			dst[2] = col[0];
 
 			dst += 3;
 		}
@@ -501,9 +501,9 @@ void st_video_update_line_1 (st_video_t *vid)
 
 			col = vid->pal_col[idx];
 
-			dst[0] = col[0];
+			dst[0] = col[2];
 			dst[1] = col[1];
-			dst[2] = col[2];
+			dst[2] = col[0];
 
 			dst += 3;
 		}
@@ -543,9 +543,9 @@ void st_video_update_line_2 (st_video_t *vid)
 				col = vid->pal_mono[1];
 			}
 
-			dst[0] = col[0];
+			dst[0] = col[2];
 			dst[1] = col[1];
-			dst[2] = col[2];
+			dst[2] = col[0];
 
 			msk >>= 1;
 

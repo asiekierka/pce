@@ -133,9 +133,9 @@ void mda_line_text (mda_t *mda, unsigned row)
 		for (j = 0; j < 9; j++) {
 			col = (val & 0x100) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 1;
 		}

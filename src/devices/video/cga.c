@@ -230,9 +230,9 @@ void cga_line_composite (cga_t *cga, unsigned char *dst, const unsigned char *sr
 			if (G <= 0.0) g = 0; else if (G >= 16.0) g = 255; else g = 16.0 * G;
 			if (B <= 0.0) b = 0; else if (B >= 16.0) b = 255; else b = 16.0 * B;
 
-			dst[0] = r;
+			dst[2] = r;
 			dst[1] = g;
-			dst[2] = b;
+			dst[0] = b;
 
 			dst += 3;
 
@@ -304,9 +304,9 @@ void cga_make_comp_tab (cga_t *cga)
 
 			dst = cga->comp_tab + 3 * (16 * j + i);
 
-			dst[0] = (unsigned char) (src[0] * r);
+			dst[0] = (unsigned char) (src[2] * r);
 			dst[1] = (unsigned char) (src[1] * g);
-			dst[2] = (unsigned char) (src[2] * b);
+			dst[2] = (unsigned char) (src[0] * b);
 		}
 	}
 
@@ -388,9 +388,9 @@ void cga_line_mode0 (cga_t *cga, unsigned row)
 		for (j = 0; j < 8; j++) {
 			col = (val & mask) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			mask >>= 1;
 		}
@@ -428,9 +428,9 @@ void cga_line_mode1 (cga_t *cga, unsigned row)
 		for (j = 0; j < 8; j++) {
 			col = cga_rgb[cga->pal[(val >> 14) & 3]];
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 2;
 		}
@@ -515,9 +515,9 @@ void cga_line_mode2 (cga_t *cga, unsigned row)
 		for (j = 0; j < 16; j++) {
 			col = (val & 0x8000) ? fg : bg;
 
-			*(ptr++) = col[0];
-			*(ptr++) = col[1];
 			*(ptr++) = col[2];
+			*(ptr++) = col[1];
+			*(ptr++) = col[0];
 
 			val <<= 1;
 		}
@@ -628,9 +628,9 @@ void cga_line_mode2c_auto (cga_t *cga, unsigned row)
 
 		col = cga->comp_tab + 3 * (16 * avgval + (pat & 0x0f));
 
-		*(ptr++) = col[0];
-		*(ptr++) = col[1];
 		*(ptr++) = col[2];
+		*(ptr++) = col[1];
+		*(ptr++) = col[0];
 
 		val <<= 1;
 	}
