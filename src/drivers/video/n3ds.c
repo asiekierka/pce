@@ -208,6 +208,19 @@ void n3ds_del (n3ds_t *nt)
 }
 
 static
+void n3ds_resize (n3ds_t *nt, unsigned w, unsigned h)
+{
+	linearFree(nt->display_buf);
+	C3D_TexDelete(&(nt->tex_display));
+
+	nt->display_buf_w = next_power_of_two(w);
+	nt->display_buf_h = next_power_of_two(h);
+	nt->display_buf = linearAlloc(nt->display_buf_w * nt->display_buf_h * 3);
+
+	C3D_TexInit(&(nt->tex_display), next_power_of_two(w), next_power_of_two(h), GPU_RGB8);
+}
+
+static
 int n3ds_open_keyboard (n3ds_t *nt)
 {
 	unsigned *image, *imageLinear;
@@ -332,6 +345,12 @@ void n3ds_update (n3ds_t *vt)
 	int i;
 	unsigned char *buf1, *buf2;
 	unsigned sdtFlags;
+
+	if (next_power_of_two(vt->trm.w) != vt->display_buf_w
+		|| next_power_of_two(vt->trm.h) != vt->display_buf_h)
+	{
+		n3ds_resize(vt, vt->trm.w, vt->trm.h);
+	}
 
 	xmin = 0; ymin = 0; xmax = 400; ymax = 240;
 	txmin = 0;
