@@ -28,6 +28,10 @@
 
 #include <drivers/video/terminal.h>
 
+#ifdef _3DS
+#include <3ds.h>
+#endif
+
 
 #define TRM_ESC_ESC  1
 #define TRM_ESC_OK   2
@@ -95,7 +99,12 @@ void trm_free (terminal_t *trm)
 {
 	trm_close (trm);
 
+#ifdef _3DS
+	if (trm->buf != NULL)
+		linearFree (trm->buf);
+#else
 	free (trm->buf);
+#endif
 	free (trm->scale_buf);
 }
 
@@ -251,7 +260,14 @@ void trm_set_size (terminal_t *trm, unsigned w, unsigned h)
 	if (trm->buf_cnt != cnt) {
 		unsigned char *tmp;
 
+#ifdef _3DS
+		if (trm->buf == NULL)
+			tmp = linearAlloc (cnt);
+		else
+			tmp = linearRealloc (trm->buf, cnt);
+#else
 		tmp = realloc (trm->buf, cnt);
+#endif
 		if (tmp == NULL) {
 			return;
 		}

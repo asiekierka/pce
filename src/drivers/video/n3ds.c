@@ -217,7 +217,7 @@ void n3ds_resize (n3ds_t *nt, unsigned w, unsigned h)
 	nt->display_buf_h = next_power_of_two(h);
 	nt->display_buf = linearAlloc(nt->display_buf_w * nt->display_buf_h * 3);
 
-	C3D_TexInit(&(nt->tex_display), next_power_of_two(w), next_power_of_two(h), GPU_RGB8);
+	C3D_TexInitVRAM(&(nt->tex_display), next_power_of_two(w), next_power_of_two(h), GPU_RGB8);
 }
 
 static
@@ -228,7 +228,7 @@ int n3ds_open_keyboard (n3ds_t *nt)
 
 	lodepng_decode32_file(&image, &width, &height, "romfs:/kbd_display.png");
 	
-	C3D_TexInit(&(nt->tex_keyboard), width, height, GPU_RGBA8);
+	C3D_TexInitVRAM(&(nt->tex_keyboard), width, height, GPU_RGBA8);
 	imageLinear = linearAlloc(width * height * 4);
 
 	for (i = 0; i < width*height; i++)
@@ -271,7 +271,7 @@ int n3ds_open (n3ds_t *nt, unsigned w, unsigned h)
 	nt->display_buf_h = next_power_of_two(h);
 	nt->display_buf = linearAlloc(nt->display_buf_w * nt->display_buf_h * 3);
 
-	C3D_TexInit(&(nt->tex_display), next_power_of_two(w), next_power_of_two(h), GPU_RGB8);
+	C3D_TexInitVRAM(&(nt->tex_display), next_power_of_two(w), next_power_of_two(h), GPU_RGB8);
 	C3D_TexSetFilter(&(nt->tex_display), GPU_LINEAR, GPU_LINEAR);
 	n3ds_open_keyboard(nt);
 
@@ -358,15 +358,12 @@ void n3ds_update (n3ds_t *vt)
 	tymin = 1.0f - ((float) vt->trm.h / vt->display_buf_h);
 	tymax = 1;
 
-	buf1 = (unsigned char*) vt->trm.buf;
-	buf2 = (unsigned char*) vt->display_buf;
-	for (i = 0; i < vt->trm.h; i++) {
-		memcpy(buf2, buf1, vt->trm.w * 3);
-		buf1 += vt->trm.w * 3;
-		buf2 += vt->display_buf_w * 3;
-	}
+	GSPGPU_InvalidateDataCache(vt->trm.buf, vt->trm.w * vt->trm.h * 3);
+	GX_TextureCopy(vt->trm.buf, GX_BUFFER_DIM(vt->trm.w * 3 / 16, 0),
+		vt->display_buf, GX_BUFFER_DIM(vt->trm.w * 3 / 16, (vt->display_buf_w - vt->trm.w) * 3 / 16),
+		vt->trm.w * vt->trm.h * 3, 8);
+	gspWaitForPPF();
 
-	GSPGPU_FlushDataCache(vt->display_buf, vt->display_buf_w * vt->display_buf_h * 3);
 	sdtFlags = (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) |
                 GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) |
                 GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO));
@@ -374,7 +371,6 @@ void n3ds_update (n3ds_t *vt)
 	GX_DisplayTransfer(vt->display_buf, GX_BUFFER_DIM(vt->display_buf_w, vt->display_buf_h), 
 		vt->tex_display.data, GX_BUFFER_DIM(vt->tex_display.width,
 		vt->tex_display.height), sdtFlags);
-
 	gspWaitForPPF();
 
 	C3D_RenderBufClear(&(vt->scr_top));

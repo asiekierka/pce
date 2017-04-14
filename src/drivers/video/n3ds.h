@@ -33,6 +33,7 @@
 
 #define TOUCH_AREA_MODIFIER 1
 #define MAX_KEYS_DOWN 8
+#define AUTOREPEAT_TIME 125
 
 typedef struct
 {

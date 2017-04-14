@@ -30,8 +30,8 @@
 #include <drivers/sound/sound-n3ds.h>
 
 
-static
-void snd_n3ds_cleanup (sound_drv_t *sdrv, bool force)
+static inline
+void snd_n3ds_cleanup (sound_drv_t *sdrv)
 {
 	int i;
 	sound_n3ds_t *drv;
@@ -40,7 +40,7 @@ void snd_n3ds_cleanup (sound_drv_t *sdrv, bool force)
 
 	for (i = 0; i < N3DS_AUDIO_BUF_COUNT; i++)
 	{
-		if (drv->buf[i].data_vaddr != NULL && (/* force || */ drv->buf[i].status == NDSP_WBUF_DONE))
+		if (drv->buf[i].data_vaddr != NULL && (drv->buf[i].status == NDSP_WBUF_DONE))
 		{
 			linearFree(drv->buf[i].data_vaddr);
 			drv->buf[i].data_vaddr = NULL;
@@ -52,11 +52,19 @@ void snd_n3ds_cleanup (sound_drv_t *sdrv, bool force)
 static
 void snd_n3ds_close (sound_drv_t *sdrv)
 {
+	int i;
 	sound_n3ds_t *drv;
 
 	drv = sdrv->ext;
 
-//	snd_n3ds_cleanup(sdrv, true);
+	ndspChnWaveBufClear(0);
+	ndspExit();
+
+	for (i = 0; i < N3DS_AUDIO_BUF_COUNT; i++)
+	{
+		if (drv->buf[i].data_vaddr != NULL)
+			linearFree(drv->buf[i].data_vaddr);
+	}
 
 	free (drv);
 }
@@ -70,21 +78,24 @@ int snd_n3ds_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 
 	drv = sdrv->ext;
 
-	snd_n3ds_cleanup(sdrv, false);
+	snd_n3ds_cleanup(sdrv);
 	for (i = 0; i < N3DS_AUDIO_BUF_COUNT; i++)
 	{
 		if (drv->buf[i].status == NDSP_WBUF_FREE)
 		{
 			drv->buf[i].nsamples = cnt;
 			drv->buf[i].data_vaddr = linearAlloc(2 * sdrv->channels * cnt);
-			memcpy(drv->buf[i].data_vaddr, buf, 2 * sdrv->channels * cnt);
 			if (!drv->sign)
 			{
 				buf2 = drv->buf[i].data_vaddr;
 				for (int i = 0; i < sdrv->channels * cnt; i++)
-					buf2[i] ^= 0x8000;
-					
+					buf2[i] = buf[i] ^ 0x8000;
 			}
+			else
+			{
+				memcpy(drv->buf[i].data_vaddr, buf, 2 * sdrv->channels * cnt);
+			}
+			DSP_FlushDataCache(drv->buf[i].data_vaddr, 2 * sdrv->channels * cnt);
 			ndspChnWaveBufAdd(0, &(drv->buf[i]));
 			return (0);
 		}
