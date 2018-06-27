@@ -47,7 +47,7 @@ typedef struct {
 	
 	C3D_Tex        tex_display, tex_keyboard;
 	C3D_Mtx        mtx_top, mtx_bottom;
-	C3D_RenderBuf  scr_top, scr_bottom;
+	C3D_RenderTarget *scr_top, *scr_bottom;
 
 	u8*            display_buf;
 	unsigned       display_buf_w, display_buf_h;

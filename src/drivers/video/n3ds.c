@@ -226,7 +226,7 @@ int n3ds_open_keyboard (n3ds_t *nt)
 	unsigned *image, *imageLinear;
 	unsigned width, height, i, sdtFlags;
 
-	lodepng_decode32_file(&image, &width, &height, "romfs:/kbd_display.png");
+	lodepng_decode32_file((u8**) &image, &width, &height, "romfs:/kbd_display.png");
 	
 	C3D_TexInitVRAM(&(nt->tex_keyboard), width, height, GPU_RGBA8);
 	imageLinear = linearAlloc(width * height * 4);
@@ -239,11 +239,11 @@ int n3ds_open_keyboard (n3ds_t *nt)
                 GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGBA8) |
                 GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO));
 
-	GX_DisplayTransfer(imageLinear, GX_BUFFER_DIM(width, height), nt->tex_keyboard.data, GX_BUFFER_DIM(width, height), sdtFlags);
-	gspWaitForPPF();
+	C3D_SyncDisplayTransfer((u32*) imageLinear, GX_BUFFER_DIM(width, height), nt->tex_keyboard.data, GX_BUFFER_DIM(width, height), sdtFlags);
 
 	linearFree(imageLinear);
 	free(image);
+	return 0;
 }
 
 static
@@ -261,8 +261,12 @@ int n3ds_open (n3ds_t *nt, unsigned w, unsigned h)
 
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
-	C3D_RenderBufInit(&(nt->scr_top), 240, 400, GPU_RB_RGB8, 0);
-	C3D_RenderBufInit(&(nt->scr_bottom), 240, 320, GPU_RB_RGB8, 0);
+	nt->scr_top = C3D_RenderTargetCreate(240, 400, GPU_RB_RGB8, GPU_RB_DEPTH16);
+	nt->scr_bottom = C3D_RenderTargetCreate(240, 320, GPU_RB_RGB8, GPU_RB_DEPTH16);
+        C3D_RenderTargetSetOutput(nt->scr_top, GFX_TOP, GFX_LEFT,
+                GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8));
+        C3D_RenderTargetSetOutput(nt->scr_bottom, GFX_BOTTOM, GFX_LEFT,
+                GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8));
 
 	Mtx_OrthoTilt(&(nt->mtx_top), 0.0, 400.0, 0.0, 240.0, -1.0, 1.0, true);
 	Mtx_OrthoTilt(&(nt->mtx_bottom), 0.0, 320.0, 0.0, 240.0, -1.0, 1.0, true);
@@ -277,7 +281,8 @@ int n3ds_open (n3ds_t *nt, unsigned w, unsigned h)
 
  	texEnv = C3D_GetTexEnv(0);
 	C3D_TexEnvSrc(texEnv, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
-	C3D_TexEnvOp(texEnv, C3D_Both, 0, 0, 0);
+	C3D_TexEnvOpRgb(texEnv, 0, 0, 0);
+	C3D_TexEnvOpAlpha(texEnv, 0, 0, 0);
 	C3D_TexEnvFunc(texEnv, C3D_Both, GPU_MODULATE);
 
 	C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
@@ -305,8 +310,8 @@ int n3ds_close (n3ds_t *nt)
 	C3D_TexDelete(&(nt->tex_display));
 	C3D_TexDelete(&(nt->tex_keyboard));
 
-	C3D_RenderBufDelete(&(nt->scr_top));
-	C3D_RenderBufDelete(&(nt->scr_bottom));
+	C3D_RenderTargetDelete(nt->scr_top);
+	C3D_RenderTargetDelete(nt->scr_bottom);
 
 	C3D_Fini();
 
@@ -343,7 +348,6 @@ void n3ds_update (n3ds_t *vt)
 {
 	float xmin, ymin, xmax, ymax, txmin, tymin, txmax, tymax;
 	int i;
-	unsigned char *buf1, *buf2;
 	unsigned sdtFlags;
 
 	if (next_power_of_two(vt->trm.w) != vt->display_buf_w
@@ -358,23 +362,24 @@ void n3ds_update (n3ds_t *vt)
 	tymin = 1.0f - ((float) vt->trm.h / vt->display_buf_h);
 	tymax = 1;
 
-	GSPGPU_InvalidateDataCache(vt->trm.buf, vt->trm.w * vt->trm.h * 3);
-	GX_TextureCopy(vt->trm.buf, GX_BUFFER_DIM(vt->trm.w * 3 / 16, 0),
-		vt->display_buf, GX_BUFFER_DIM(vt->trm.w * 3 / 16, (vt->display_buf_w - vt->trm.w) * 3 / 16),
+	if (!C3D_FrameBegin(0))
+		return;
+
+	GSPGPU_FlushDataCache(vt->trm.buf, vt->trm.w * vt->trm.h * 3);
+	C3D_SyncTextureCopy((u32*) vt->trm.buf, GX_BUFFER_DIM(vt->trm.w * 3 / 16, 0),
+		(u32*) vt->display_buf, GX_BUFFER_DIM(vt->trm.w * 3 / 16, (vt->display_buf_w - vt->trm.w) * 3 / 16),
 		vt->trm.w * vt->trm.h * 3, 8);
-	gspWaitForPPF();
 
 	sdtFlags = (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) |
                 GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) |
                 GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO));
 
-	GX_DisplayTransfer(vt->display_buf, GX_BUFFER_DIM(vt->display_buf_w, vt->display_buf_h), 
+	C3D_SyncDisplayTransfer((u32*)vt->display_buf, GX_BUFFER_DIM(vt->display_buf_w, vt->display_buf_h), 
 		vt->tex_display.data, GX_BUFFER_DIM(vt->tex_display.width,
 		vt->tex_display.height), sdtFlags);
-	gspWaitForPPF();
 
-	C3D_RenderBufClear(&(vt->scr_top));
-	C3D_RenderBufBind(&(vt->scr_top));
+	C3D_RenderTargetClear(vt->scr_top, C3D_CLEAR_ALL, 0, 0);
+	C3D_FrameDrawOn(vt->scr_top);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, vt->shader_proj_mtx_loc, &(vt->mtx_top));
 
 	C3D_TexBind(0, &(vt->tex_display));
@@ -392,8 +397,8 @@ void n3ds_update (n3ds_t *vt)
                 C3D_ImmSendAttrib(txmax, tymax, 1.0f, 0.0f);
 	C3D_ImmDrawEnd();
 
-	C3D_RenderBufClear(&(vt->scr_bottom));
-	C3D_RenderBufBind(&(vt->scr_bottom));
+	C3D_RenderTargetClear(vt->scr_bottom, C3D_CLEAR_ALL, 0, 0);
+	C3D_FrameDrawOn(vt->scr_bottom);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, vt->shader_proj_mtx_loc, &(vt->mtx_bottom));
 
 	n3ds_draw_texture(&(vt->tex_keyboard), 0, 0, 0, 0, 320, 240, 1.0f);
@@ -404,17 +409,7 @@ void n3ds_update (n3ds_t *vt)
 			vt->keys_down[i]->w, vt->keys_down[i]->h - 1, 0.5f);
 	}
 
-	C3D_Flush();
-
-        C3D_RenderBufTransfer(&(vt->scr_top), (u32*) gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL),
-                GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8));
-        C3D_RenderBufTransfer(&(vt->scr_top), (u32*) gfxGetFramebuffer(GFX_TOP, GFX_RIGHT, NULL, NULL),
-                GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8));
-	C3D_RenderBufTransfer(&(vt->scr_bottom), (u32*) gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL),
-		GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGB8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8));
-        gfxSwapBuffersGpu();
-
-//        gspWaitForEvent(GSPGPU_EVENT_VBlank0, false);
+	C3D_FrameEnd(0);
 }
 
 static
