@@ -950,14 +950,14 @@ void e82730_line_text (e82730_t *crt, e82730_rowbuf_t *rb, unsigned char *p)
 		}
 
 		if (val & 0x8000) {
-			*(p++) = fg[0];
-			*(p++) = fg[1];
 			*(p++) = fg[2];
+			*(p++) = fg[1];
+			*(p++) = fg[0];
 		}
 		else {
-			*(p++) = bg[0];
-			*(p++) = bg[1];
 			*(p++) = bg[2];
+			*(p++) = bg[1];
+			*(p++) = bg[0];
 		}
 
 		val = (val << 1) & 0xffff;
